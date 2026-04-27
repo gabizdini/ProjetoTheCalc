@@ -22,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
     private Button buttonCinco, buttonSeis, buttonSete, buttonOito, buttonNove;
 
     // Botões de operação
-    private Button buttonSoma, buttonSubtracao, buttonMultiplicacao, buttonDivisao, buttonPorcento;
+    private Button buttonSoma, buttonSubtracao, buttonMultiplicacao, buttonDivisao, buttonPorcento, buttonVirgula;
 
     // Botões de controle
     private Button buttonIgual, buttonReset, buttonDelete;
@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
         buttonMultiplicacao = findViewById(R.id.buttonMultiplicacaoID);
         buttonDivisao = findViewById(R.id.buttonDivisaoID);
         buttonPorcento = findViewById(R.id.buttonPorcentoID);
+        buttonVirgula = findViewById(R.id.buttonVirgulaID);
 
         // Inicializar botões de controle
         buttonIgual = findViewById(R.id.buttonIgualID);
@@ -89,6 +90,14 @@ public class MainActivity extends AppCompatActivity {
         setOperationButtonListener(buttonMultiplicacao, "*");
         setOperationButtonListener(buttonDivisao, "/");
         setOperationButtonListener(buttonPorcento, "%");
+
+        // Listener do botão vírgula (.)
+        buttonVirgula.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                adicionarVirgula();
+            }
+        });
 
         // Listener do botão igual (=)
         buttonIgual.setOnClickListener(new View.OnClickListener() {
@@ -179,18 +188,30 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            // Exibir na tela anterior
-                            textViewUltimaExpressao.setText(expressaoTemp);
+                            // Exibir na tela anterior a expressão formatada
+                            String expressaoFormatada = formatarExpressaoParaExibicao(expressaoTemp);
+                            textViewUltimaExpressao.setText(expressaoFormatada);
 
                             // Formatar resultado (remover casas decimais se for inteiro)
                             if (resultado == (long) resultado) {
-                                textViewResultado.setText(String.format("%d", (long) resultado));
+                                String resultadoInteiro = String.format("%d", (long) resultado);
+                                String resultadoFormatado = formatarNumero(resultadoInteiro);
+                                textViewResultado.setText(resultadoFormatado);
+                                // Armazenar como inteiro (sem ponto decimal)
+                                expressaoAtual = resultadoInteiro;
                             } else {
-                                textViewResultado.setText(String.format(java.util.Locale.getDefault(), "%.2f", resultado));
+                                // Formatar com até 8 casas decimais, removendo zeros à direita
+                                String resultadoFormatado = String.format(java.util.Locale.getDefault(), "%.8f", resultado);
+                                // Remove zeros à direita
+                                resultadoFormatado = resultadoFormatado.replaceAll("0+$", "");
+                                // Se terminar com ponto, remove
+                                resultadoFormatado = resultadoFormatado.replaceAll("\\.$", "");
+                                // Formata com separadores
+                                String resultadoExibicao = formatarNumero(resultadoFormatado);
+                                textViewResultado.setText(resultadoExibicao);
+                                // Armazenar com decimais
+                                expressaoAtual = resultadoFormatado;
                             }
-
-                            // Atualizar expressão para o próximo cálculo
-                            expressaoAtual = String.valueOf(resultado);
 
                             Log.d(TAG, "Cálculo realizado: " + expressaoAtual);
                         }
@@ -279,8 +300,81 @@ public class MainActivity extends AppCompatActivity {
         if (expressaoAtual.isEmpty()) {
             textViewResultado.setText("0");
         } else {
-            textViewResultado.setText(expressaoAtual);
+            // Exibir a expressão com formatação correta
+            String expressaoFormatada = formatarExpressaoParaExibicao(expressaoAtual);
+            textViewResultado.setText(expressaoFormatada);
         }
+    }
+
+    private String formatarExpressaoParaExibicao(String expressao) {
+        // Esta função formata a expressão para exibição no display
+        // Converte pontos em vírgulas para decimais e adiciona separadores de milhares
+        
+        StringBuilder resultado = new StringBuilder();
+        int i = 0;
+        
+        while (i < expressao.length()) {
+            char c = expressao.charAt(i);
+            
+            // Se for um operador, adiciona diretamente
+            if (c == '+' || c == '-' || c == '*' || c == '/' || c == '%') {
+                resultado.append(c);
+                i++;
+            } else {
+                // Extrai o número completo (incluindo o ponto)
+                StringBuilder numero = new StringBuilder();
+                while (i < expressao.length() && Character.isDigit(expressao.charAt(i)) || 
+                       (i < expressao.length() && expressao.charAt(i) == '.')) {
+                    numero.append(expressao.charAt(i));
+                    i++;
+                }
+                
+                // Formata o número
+                String numeroFormatado = formatarNumero(numero.toString());
+                resultado.append(numeroFormatado);
+            }
+        }
+        
+        return resultado.toString();
+    }
+
+    private String formatarNumero(String numero) {
+        // Formata um número: "1000.5" vira "1.000,5"
+        // "1234567" vira "1.234.567"
+        // "1000." vira "1.000," (com vírgula no final mesmo sem decimal)
+        
+        if (numero.isEmpty()) {
+            return numero;
+        }
+        
+        // Verificar se termina com ponto (indica que o usuário clicou na vírgula)
+        boolean temVirgulaAoFinal = numero.endsWith(".");
+        
+        // Separar a parte inteira da parte decimal
+        String[] partes = numero.split("\\.");
+        String parteInteira = partes[0];
+        String parteDecimal = partes.length > 1 ? partes[1] : "";
+        
+        // Formatar a parte inteira com separadores de milhares
+        StringBuilder inteitoFormatada = new StringBuilder();
+        int contador = 0;
+        
+        for (int i = parteInteira.length() - 1; i >= 0; i--) {
+            if (contador == 3) {
+                inteitoFormatada.insert(0, '.');
+                contador = 0;
+            }
+            inteitoFormatada.insert(0, parteInteira.charAt(i));
+            contador++;
+        }
+        
+        // Montar o resultado final
+        String resultado = inteitoFormatada.toString();
+        if (!parteDecimal.isEmpty() || temVirgulaAoFinal) {
+            resultado += "," + parteDecimal;
+        }
+        
+        return resultado;
     }
 
 
@@ -292,5 +386,44 @@ public class MainActivity extends AppCompatActivity {
 
         // Encontrar o maior índice entre os operadores
         return Math.max(Math.max(indiceSoma, indiceSubtracao), Math.max(indiceMultiplicacao, indiceDivisao));
+    }
+
+    private void adicionarVirgula() {
+        // Adiciona a vírgula (ou ponto) na expressão atual, tratando casos especiais
+        if (expressaoAtual.isEmpty()) {
+            // Se a expressão está vazia, adiciona "0,"
+            expressaoAtual = "0.";
+        } else if (expressaoAtual.equals("Erro")) {
+            // Se a expressão atual é "Erro", reseta a calculadora
+            expressaoAtual = "0.";
+        } else if (expressaoAtual.endsWith("+") || expressaoAtual.endsWith("-") ||
+                   expressaoAtual.endsWith("*") || expressaoAtual.endsWith("/") ||
+                   expressaoAtual.endsWith("%")) {
+            // Se termina com operador, adiciona "0," (novo número)
+            expressaoAtual += "0.";
+        } else {
+            // Verifica se já existe uma vírgula no número atual
+            int indiceUltimoOperador = encontrarUltimoOperador(expressaoAtual);
+            String parteDecimal;
+
+            if (indiceUltimoOperador == -1) {
+                // Não há operador, então toda a expressão é o número
+                parteDecimal = expressaoAtual;
+            } else {
+                // Pega apenas a parte após o último operador
+                parteDecimal = expressaoAtual.substring(indiceUltimoOperador + 1);
+            }
+
+            // Se não contém ponto/vírgula, adiciona
+            if (!parteDecimal.contains(".")) {
+                expressaoAtual += ".";
+            } else {
+                Log.d(TAG, "Vírgula já existe neste número. Operação bloqueada.");
+                return;
+            }
+        }
+
+        atualizarDisplay();
+        Log.d(TAG, "Vírgula adicionada. Expressão: " + expressaoAtual);
     }
 }

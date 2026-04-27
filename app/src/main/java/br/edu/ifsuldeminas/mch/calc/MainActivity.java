@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "ifsuldeminas.mch.calc";
     private static final String PREFS_NAME = "CalcPrefs";
     private static final String THEME_KEY = "isDarkTheme";
-
+    //declaração de variáveis para os componentes da interface
     // Botões numéricos
     private Button buttonZero, buttonUm, buttonDois, buttonTres, buttonQuatro;
     private Button buttonCinco, buttonSeis, buttonSete, buttonOito, buttonNove;
@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     // TextViews de exibição
     private TextView textViewResultado;
     private TextView textViewUltimaExpressao;
+    private TextView textViewHeaderTitle;
 
     // Views adicionais
     private View splitLineHorizontal;
@@ -61,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
         getWindow().getDecorView().setBackgroundColor(Color.WHITE);
 
         Log.d(TAG, "MainActivity onCreate iniciado");
-
+        //inicialização dos componentes da interface
         // Inicializar TextViews
         textViewResultado = findViewById(R.id.textViewResultadoID);
         textViewUltimaExpressao = findViewById(R.id.textViewUltimaExpressaoID);
@@ -99,6 +100,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Inicializar header layout
         headerLayout = findViewById(R.id.headerLayout);
+
+        // Inicializar TextView do header
+        textViewHeaderTitle = findViewById(R.id.textViewHeaderTitleID);
 
         // Inicializar botão invisível
         buttonBlanck = findViewById(R.id.buttonBlanckID);
@@ -502,6 +506,7 @@ public class MainActivity extends AppCompatActivity {
             // Header
             if (headerLayout != null) {
                 headerLayout.setBackgroundColor(getResources().getColor(R.color.header_fundo_dark));
+                textViewHeaderTitle.setTextColor(getResources().getColor(R.color.header_texto_dark));
             }
             
             // Display (TextViews)
@@ -548,6 +553,7 @@ public class MainActivity extends AppCompatActivity {
             // Header
             if (headerLayout != null) {
                 headerLayout.setBackgroundColor(Color.WHITE);
+                textViewHeaderTitle.setTextColor(Color.BLACK);
             }
             
             // Botões numéricos

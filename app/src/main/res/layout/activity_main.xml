@@ -9,6 +9,37 @@
     android:background="@android:color/white"
     tools:context=".MainActivity">
 
+    <!-- Header com título e botão de tema -->
+    <FrameLayout
+        android:id="@+id/headerLayout"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:background="@android:color/white"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Calculadora SI"
+            android:textColor="@android:color/black"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/buttonToggleTemaID"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="16dp"
+            android:text="🌙"
+            android:textSize="24sp"
+            android:background="?attr/selectableItemBackground"
+            style="?attr/borderlessButtonStyle" />
+    </FrameLayout>
+
     <Button
         android:id="@+id/buttonZeroID"
         android:layout_width="wrap_content"

@@ -2,9 +2,11 @@ package br.edu.ifsuldeminas.mch.calc;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
-import android.os.Bundle;
+import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -16,6 +18,8 @@ import net.objecthunter.exp4j.ExpressionBuilder;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "ifsuldeminas.mch.calc";
+    private static final String PREFS_NAME = "CalcPrefs";
+    private static final String THEME_KEY = "isDarkTheme";
 
     // Botões numéricos
     private Button buttonZero, buttonUm, buttonDois, buttonTres, buttonQuatro;
@@ -27,12 +31,24 @@ public class MainActivity extends AppCompatActivity {
     // Botões de controle
     private Button buttonIgual, buttonReset, buttonDelete;
 
+    // Botão de alternância de tema
+    private Button buttonToggleTema;
+
+    // Layout principal
+    private ConstraintLayout mainLayout;
+
+    // Header layout
+    private android.widget.FrameLayout headerLayout;
+
     // TextViews de exibição
     private TextView textViewResultado;
     private TextView textViewUltimaExpressao;
 
     // Variável para armazenar a expressão atual
     private String expressaoAtual = "";
+
+    // Variável para armazenar o estado do tema
+    private boolean isDarkTheme;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +87,22 @@ public class MainActivity extends AppCompatActivity {
         buttonIgual = findViewById(R.id.buttonIgualID);
         buttonReset = findViewById(R.id.buttonResetID);
         buttonDelete = findViewById(R.id.buttonDeleteID);
+
+        // Inicializar botão de alternância de tema
+        buttonToggleTema = findViewById(R.id.buttonToggleTemaID);
+
+        // Inicializar layout principal
+        mainLayout = findViewById(R.id.activity_main_layout_id);
+
+        // Inicializar header layout
+        headerLayout = findViewById(R.id.headerLayout);
+
+        // Carregar estado do tema
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        isDarkTheme = sharedPreferences.getBoolean(THEME_KEY, false);
+
+        // Aplicar tema ao iniciar
+        aplicarTema();
 
         // Definir listeners dos botões numéricos
         setNumericButtonListener(buttonZero, "0");
@@ -127,6 +159,14 @@ public class MainActivity extends AppCompatActivity {
                     atualizarDisplay();
                     Log.d(TAG, "Último caractere deletado. Expressão: " + expressaoAtual);
                 }
+            }
+        });
+
+        // Listener do botão de alternância de tema
+        buttonToggleTema.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                alternarTema();
             }
         });
 
@@ -425,5 +465,112 @@ public class MainActivity extends AppCompatActivity {
 
         atualizarDisplay();
         Log.d(TAG, "Vírgula adicionada. Expressão: " + expressaoAtual);
+    }
+
+    private void alternarTema() {
+        // Alterna entre tema claro e escuro
+        isDarkTheme = !isDarkTheme;
+        SharedPreferences.Editor editor = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
+        editor.putBoolean(THEME_KEY, isDarkTheme);
+        editor.apply();
+
+        // Atualizar o emoji do botão
+        if (isDarkTheme) {
+            buttonToggleTema.setText("☀️"); // Sol para voltar ao tema claro
+        } else {
+            buttonToggleTema.setText("🌙"); // Lua para ir para o tema escuro
+        }
+
+        aplicarTema();
+    }
+
+    private void aplicarTema() {
+        if (isDarkTheme) {
+            // Aplicar tema escuro personalizado
+            // Fundo geral
+            mainLayout.setBackgroundColor(getResources().getColor(R.color.fundo_app_dark));
+            
+            // Header
+            if (headerLayout != null) {
+                headerLayout.setBackgroundColor(getResources().getColor(R.color.header_fundo_dark));
+            }
+            
+            // Display (TextViews)
+            textViewResultado.setTextColor(getResources().getColor(R.color.numero_display_dark));
+            textViewUltimaExpressao.setTextColor(getResources().getColor(R.color.numero_display_dark));
+            
+            // Botões numéricos
+            Button[] botoesNumericos = {buttonZero, buttonUm, buttonDois, buttonTres, buttonQuatro,
+                                        buttonCinco, buttonSeis, buttonSete, buttonOito, buttonNove};
+            for (Button btn : botoesNumericos) {
+                btn.setBackgroundColor(getResources().getColor(R.color.botao_dark));
+                btn.setTextColor(getResources().getColor(R.color.numero_display_dark));
+            }
+            
+            // Botões de operação (exceto botão igual)
+            Button[] botoesOperacao = {buttonSoma, buttonSubtracao, buttonMultiplicacao, 
+                                       buttonDivisao, buttonPorcento, buttonVirgula};
+            for (Button btn : botoesOperacao) {
+                btn.setBackgroundColor(getResources().getColor(R.color.botao_dark));
+                btn.setTextColor(getResources().getColor(R.color.operador_display_dark));
+            }
+            
+            // Botão igual (estilo especial)
+            buttonIgual.setBackgroundColor(getResources().getColor(R.color.botao_igual_fundo_dark));
+            buttonIgual.setTextColor(getResources().getColor(R.color.botao_igual_texto_dark));
+            
+            // Botões de controle C e D
+            buttonReset.setBackgroundColor(getResources().getColor(R.color.botao_dark));
+            buttonReset.setTextColor(getResources().getColor(R.color.botao_controle_texto_dark));
+            
+            buttonDelete.setBackgroundColor(getResources().getColor(R.color.botao_dark));
+            buttonDelete.setTextColor(getResources().getColor(R.color.botao_controle_texto_dark));
+            
+            // Botão de tema
+            buttonToggleTema.setBackgroundColor(getResources().getColor(R.color.botao_dark));
+            buttonToggleTema.setText("☀️"); // Sol para voltar ao tema claro
+            
+        } else {
+            // Aplicar tema claro
+            mainLayout.setBackgroundColor(Color.WHITE);
+            textViewResultado.setTextColor(Color.BLACK);
+            textViewUltimaExpressao.setTextColor(Color.BLACK);
+            
+            // Header
+            if (headerLayout != null) {
+                headerLayout.setBackgroundColor(Color.WHITE);
+            }
+            
+            // Botões numéricos
+            Button[] botoesNumericos = {buttonZero, buttonUm, buttonDois, buttonTres, buttonQuatro,
+                                        buttonCinco, buttonSeis, buttonSete, buttonOito, buttonNove};
+            for (Button btn : botoesNumericos) {
+                btn.setBackgroundColor(Color.LTGRAY);
+                btn.setTextColor(Color.BLACK);
+            }
+            
+            // Botões de operação
+            Button[] botoesOperacao = {buttonSoma, buttonSubtracao, buttonMultiplicacao, 
+                                       buttonDivisao, buttonPorcento, buttonVirgula};
+            for (Button btn : botoesOperacao) {
+                btn.setBackgroundColor(Color.LTGRAY);
+                btn.setTextColor(Color.BLACK);
+            }
+            
+            // Botão igual
+            buttonIgual.setBackgroundColor(Color.GRAY);
+            buttonIgual.setTextColor(Color.WHITE);
+            
+            // Botões de controle
+            buttonReset.setBackgroundColor(Color.LTGRAY);
+            buttonReset.setTextColor(Color.BLACK);
+            
+            buttonDelete.setBackgroundColor(Color.LTGRAY);
+            buttonDelete.setTextColor(Color.BLACK);
+            
+            // Botão de tema
+            buttonToggleTema.setBackgroundColor(Color.LTGRAY);
+            buttonToggleTema.setText("🌙"); // Lua para ir para o tema escuro
+        }
     }
 }

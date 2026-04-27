@@ -22,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
     private Button buttonCinco, buttonSeis, buttonSete, buttonOito, buttonNove;
 
     // Botões de operação
-    private Button buttonSoma, buttonSubtracao, buttonMultiplicacao, buttonDivisao;
+    private Button buttonSoma, buttonSubtracao, buttonMultiplicacao, buttonDivisao, buttonPorcento;
 
     // Botões de controle
     private Button buttonIgual, buttonReset, buttonDelete;
@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
         buttonSubtracao = findViewById(R.id.buttonSubtracaoID);
         buttonMultiplicacao = findViewById(R.id.buttonMultiplicacaoID);
         buttonDivisao = findViewById(R.id.buttonDivisaoID);
+        buttonPorcento = findViewById(R.id.buttonPorcentoID);
 
         // Inicializar botões de controle
         buttonIgual = findViewById(R.id.buttonIgualID);
@@ -87,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
         setOperationButtonListener(buttonSubtracao, "-");
         setOperationButtonListener(buttonMultiplicacao, "*");
         setOperationButtonListener(buttonDivisao, "/");
+        setOperationButtonListener(buttonPorcento, "%");
 
         // Listener do botão igual (=)
         buttonIgual.setOnClickListener(new View.OnClickListener() {
@@ -143,7 +145,8 @@ public class MainActivity extends AppCompatActivity {
                     !expressaoAtual.endsWith("+") &&
                     !expressaoAtual.endsWith("-") &&
                     !expressaoAtual.endsWith("*") &&
-                    !expressaoAtual.endsWith("/")) {
+                    !expressaoAtual.endsWith("/") &&
+                    !expressaoAtual.endsWith("%")) {
                     expressaoAtual += operacao;
                     atualizarDisplay();
                     Log.d(TAG, "Operação adicionada: " + operacao + ". Expressão: " + expressaoAtual);
@@ -162,7 +165,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    Expression avaliadorExpressao = new ExpressionBuilder(expressaoAtual).build();
+                    // Processar a porcentagem ANTES de calcular
+                    String expressaoProcessada = processarPorcentagem(expressaoAtual);
+                    
+                    Log.d(TAG, "Expressão original: " + expressaoAtual);
+                    Log.d(TAG, "Expressão processada: " + expressaoProcessada);
+                    
+                    Expression avaliadorExpressao = new ExpressionBuilder(expressaoProcessada).build();
                     final double resultado = avaliadorExpressao.evaluate();
                     final String expressaoTemp = expressaoAtual;
 
@@ -200,11 +209,88 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+    private String processarPorcentagem(String expressao) {
+        // Se não contém %, retorna a expressão original
+        if (!expressao.contains("%")) {
+            return expressao;
+        }
+
+        // Encontrar o operador que vem antes do %
+        int indicePorcentagem = expressao.indexOf("%");
+        if (indicePorcentagem == -1) {
+            return expressao;
+        }
+
+        // Encontrar qual é o último operador antes do %
+        String operador = null;
+        int indiceOperador = -1;
+
+        for (int i = indicePorcentagem - 1; i >= 0; i--) {
+            char c = expressao.charAt(i);
+            if (c == '+' || c == '-' || c == '*' || c == '/') {
+                operador = String.valueOf(c);
+                indiceOperador = i;
+                break;
+            }
+        }
+
+        // Se não encontrou operador, converter apenas o número para decimal
+        if (operador == null || indiceOperador == -1) {
+            String numero = expressao.substring(0, indicePorcentagem).trim();
+            try {
+                double valor = Double.parseDouble(numero);
+                return String.valueOf(valor / 100);
+            } catch (Exception e) {
+                return expressao;
+            }
+        }
+
+        // Extrair os números antes e depois do operador
+        String numeroAnteriorStr = expressao.substring(0, indiceOperador).trim();
+        String percentualStr = expressao.substring(indiceOperador + 1, indicePorcentagem).trim();
+
+        try {
+            double numeroAnterior = Double.parseDouble(numeroAnteriorStr);
+            double percentual = Double.parseDouble(percentualStr);
+
+            double novoValor;
+
+            // Lógica contextual baseada no operador
+            if (operador.equals("+") || operador.equals("-")) {
+                // Para soma e subtração: calcular porcentagem em relação ao primeiro número
+                // Exemplo: 200 + 50% -> 200 + (50% de 200) = 200 + 100
+                novoValor = (percentual * numeroAnterior) / 100;
+            } else {
+                // Para multiplicação e divisão: converter para decimal
+                // Exemplo: 100 * 50% -> 100 * 0.5
+                novoValor = percentual / 100;
+            }
+
+            // Montar a nova expressão
+            return numeroAnteriorStr + operador + novoValor;
+
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao processar porcentagem", e);
+            return expressao;
+        }
+    }
+
     private void atualizarDisplay() {
         if (expressaoAtual.isEmpty()) {
             textViewResultado.setText("0");
         } else {
             textViewResultado.setText(expressaoAtual);
         }
+    }
+
+
+    private int encontrarUltimoOperador(String expressao) {
+        int indiceSoma = expressao.lastIndexOf("+");
+        int indiceSubtracao = expressao.lastIndexOf("-");
+        int indiceMultiplicacao = expressao.lastIndexOf("*");
+        int indiceDivisao = expressao.lastIndexOf("/");
+
+        // Encontrar o maior índice entre os operadores
+        return Math.max(Math.max(indiceSoma, indiceSubtracao), Math.max(indiceMultiplicacao, indiceDivisao));
     }
 }

@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private Button buttonSoma, buttonSubtracao, buttonMultiplicacao, buttonDivisao, buttonPorcento, buttonVirgula;
 
     // Botões de controle
-    private Button buttonIgual, buttonReset, buttonDelete;
+    private Button buttonIgual, buttonReset, buttonDelete, buttonBlanck;
 
     // Botão de alternância de tema
     private Button buttonToggleTema;
@@ -43,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
     // TextViews de exibição
     private TextView textViewResultado;
     private TextView textViewUltimaExpressao;
+
+    // Views adicionais
+    private View splitLineHorizontal;
 
     // Variável para armazenar a expressão atual
     private String expressaoAtual = "";
@@ -96,6 +99,12 @@ public class MainActivity extends AppCompatActivity {
 
         // Inicializar header layout
         headerLayout = findViewById(R.id.headerLayout);
+
+        // Inicializar botão invisível
+        buttonBlanck = findViewById(R.id.buttonBlanckID);
+
+        // Inicializar View adicional
+        splitLineHorizontal = findViewById(R.id.splitLineHorizontalID);
 
         // Carregar estado do tema
         SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
